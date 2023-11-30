@@ -4,7 +4,6 @@ import { kv } from '@vercel/kv';
 import supabase from "@/server/supabase.service";
 
 
-
 const CHAT_ROOM = "ALL"
 
 export function GET(request: NextRequest) {
@@ -12,9 +11,7 @@ export function GET(request: NextRequest) {
   if (!username) {
     return new Response("not allowed", { status: 401 })
   }
-
-
-  
+  console.log("last event id", request.headers.get("Last-Event-ID"))
   const {
     stream,
     headers
