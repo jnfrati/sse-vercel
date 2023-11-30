@@ -1,6 +1,7 @@
 import { newSubscriber, sendTo } from "@/server/sse.service";
 import { NextRequest } from "next/server";
 import { kv } from '@vercel/kv';
+import supabase from "@/server/supabase.service";
 
 
 
@@ -11,11 +12,30 @@ export function GET(request: NextRequest) {
   if (!username) {
     return new Response("not allowed", { status: 401 })
   }
+
+
   
   const {
     stream,
     headers
   } = newSubscriber(CHAT_ROOM, username , {messages: []})
+
+  // Create a function to handle inserts 
+  const handleInserts = (payload: any) => {
+    const { new: {
+      message,
+      username,
+      time,
+    } } = payload
+    sendTo(CHAT_ROOM, { message, username, time })
+  }
+
+  // Listen to inserts
+  supabase
+    ?.channel('messages')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, handleInserts)
+    .subscribe()
+
 
   return new Response(stream, {headers})
 }
@@ -27,13 +47,11 @@ export async function POST(request: NextRequest) {
     return new Response("not allowed", { status: 400 })
   }
 
+  const { message } = body
 
-
-  await sendTo(CHAT_ROOM, {
-    username: username,
-    time: new Date().toISOString(),
-    message: body.message 
-  })
+  await supabase?.from('messages').insert(
+    { message, username },
+  )
 
   return new Response(null, {
     status: 201,
