@@ -45,7 +45,7 @@ const useEventSourceHook = () => {
 
     // Clean up
     return () => {
-      eventSource.removeEventListener('broadcast', onBroadcast);
+      eventSource?.removeEventListener('broadcast', onBroadcast);
     };
   }, []);
 
