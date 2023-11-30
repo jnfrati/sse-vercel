@@ -7,27 +7,30 @@ import { kv } from '@vercel/kv';
 const CHAT_ROOM = "ALL"
 
 export function GET(request: NextRequest) {
+  const username = request.cookies.get("username")?.value
+  if (!username) {
+    return new Response("not allowed", { status: 401 })
+  }
   
-
   const {
     stream,
     headers
-  } = newSubscriber(CHAT_ROOM, {messages: []})
+  } = newSubscriber(CHAT_ROOM, username , {messages: []})
 
   return new Response(stream, {headers})
 }
 
 export async function POST(request: NextRequest) {
   const body = await request.json()
-
-  if (!body?.message || !body?.username) {
+  const username = request.cookies.get("username")?.value
+  if (!body?.message || !username) {
     return new Response("not allowed", { status: 400 })
   }
 
 
 
   await sendTo(CHAT_ROOM, {
-    username: body.username,
+    username: username,
     time: new Date().toISOString(),
     message: body.message 
   })
@@ -35,6 +38,5 @@ export async function POST(request: NextRequest) {
   return new Response(null, {
     status: 201,
     statusText: "Success",
-
   })
 }

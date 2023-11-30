@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 
 let eventSource: EventSource | null = null
 
@@ -8,16 +8,13 @@ type Message = {
   message: string
 }
 
-type BroadcastEvent = {
-  message: Message
-} | {
-  messages: Message[]
-}
-const useEventSourceHook = () => {
+const useEventSourceHook = (enable: boolean) => {
   const [events, setEvents] = useState<Message[]>([]);
 
   useEffect(() => {
-
+    if (!enable) {
+      return;
+    }
     const onBroadcast = (event: MessageEvent) => {
 
       const data: Message = JSON.parse(event.data);
@@ -25,9 +22,7 @@ const useEventSourceHook = () => {
       if ("message" in data) {
         setEvents(prev => [
           ...prev,
-
           data,
-
         ])
         return;
       }
@@ -40,14 +35,11 @@ const useEventSourceHook = () => {
 
     eventSource.addEventListener('broadcast', onBroadcast);
 
-
-
-
     // Clean up
     return () => {
       eventSource?.removeEventListener('broadcast', onBroadcast);
     };
-  }, []);
+  }, [enable]);
 
   // Memoize the events array to prevent unnecessary re-renders
   return events;

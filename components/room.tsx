@@ -8,10 +8,45 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import useRoom from "@/lib/useRoom"
+import { FormEvent, useState } from "react"
 
 export function Room() {
-  const events = useRoom()
+  
 
+  const [username, setUsername] = useState("")
+
+  const events = useRoom(!!username)
+
+  const login = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+
+    const data = new FormData(e.currentTarget)
+    fetch("/api/auth", {
+      method: "POST",
+      body: JSON.stringify({
+        username: data.get("username"),
+      }),
+    }).then(res => {
+      if (res.ok) {
+       
+        setUsername(data.get("username") as string)
+      }
+    })
+  }
+
+  if (!username) {
+    return (
+      <form onSubmit={login}>
+        <div className="space-y-2">
+          <Label htmlFor="username">Username</Label>
+          <Input name="username" />
+          <Button className="w-full" type="submit">
+            Send
+          </Button>
+        </div>
+      </form>
+    )
+  }
 
   return (
     <div className="h-screen w-full flex flex-col">
@@ -43,7 +78,7 @@ export function Room() {
           }}>
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
-              <Input name="username" placeholder="Type your username..." />
+              <Input name="username" disabled value={username} />
               <Label htmlFor="message">Message</Label>
               <Input name="message" placeholder="Type your message..." />
               <Button className="w-full" type="submit">
